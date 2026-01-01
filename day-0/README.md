@@ -223,6 +223,7 @@ iso: /var/lib/libvirt/images/metal-amd64.iso # Path of the ISO image
 os_disk_size_mb: 30 # Size of the operating system disk
 
 talos_bridge_management:    # The management bridge uses DHCP to provision the nodes
+  nat: true
   name: br-talos-mgmt       # Name
   ip: 192.168.64.1          # IP of the bridge
   netmask: 255.255.255.0    # Netmask of the bridge
