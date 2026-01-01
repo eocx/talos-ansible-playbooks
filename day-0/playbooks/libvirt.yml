@@ -47,11 +47,11 @@
     - result.stdout | regex_search("running") == None
     ansible.builtin.command: |
         virt-install \
-            --osinfo detect=on,require=off --console pty,target_type=virtio \
+            --osinfo detect=on,require=off --console pty,target_type=virtio --boot uefi=on \
             --name {{ inventory_hostname }} --vcpus 1 --memory 2048 \
-            --disk size={{ os_disk_size_mb }} \
-            --network {{ talos_bridge_management.name }},type=network,source={{ talos_bridge_management.name }} \
-            --network {{ talos_bridge_public.name }},type=network,source={{ talos_bridge_public.name }} \
+            --disk size={{ os_disk_size_mb }},bus=virtio \
+            --network {{ talos_bridge_management.name }},type=network,source={{ talos_bridge_management.name }},model=virtio \
+            --network {{ talos_bridge_public.name }},type=network,source={{ talos_bridge_public.name }},model=virtio \
             --cdrom {{ iso }} \
             --noautoconsole
 
@@ -73,6 +73,7 @@
   - name: Libvirt | Add the host address in the host vars
     delegate_to: localhost
     ansible.builtin.lineinfile:
+      create: true
       path: "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}.yml"
       line: "ansible_host: {{ result.stdout }}"
       regexp: '^ansible_host:'
@@ -125,6 +126,7 @@
   - name: Libvirt | Add the host address in the host vars
     delegate_to: localhost
     ansible.builtin.lineinfile:
+      create: true
       path: "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}.yml"
       line: "ansible_host: {{ result.stdout }}"
       regexp: '^ansible_host:'
