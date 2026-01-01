@@ -34,7 +34,7 @@
 - name: Adding new nodes | Patch the machine configuration to add extensions
   delegate_to: localhost
   delay: 10
-  retries: 10
+  retries: 100
   register: patch
   until: patch is success
   with_fileglob:
