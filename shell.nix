@@ -8,7 +8,7 @@
       curl
       docker
       git
-      helm
+      kubernetes-helm
       jq
       kubectl
       libvirt
