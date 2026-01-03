@@ -1,0 +1,45 @@
+- hosts: controlplane
+  gather_facts: false
+  become: false
+  run_once: true
+  tasks:
+  - name: Tailscale | Check variables
+    assert:
+      fail_msg: tailscale.oauth.client_id and tailscale.oauth.client_secret must be defined
+      that:
+      - tailscale is defined
+      - tailscale.oauth is defined
+      - tailscale.oauth.client_id is defined
+      - tailscale.oauth.client_secret is defined
+      - tailscale.oauth.client_id | length > 0
+      - tailscale.oauth.client_secret | length > 0
+
+  - name: Tailscale | Install Helm repo
+    delegate_to: localhost
+    ansible.builtin.command: "{{ item }}"
+    loop:
+    - "helm repo update"
+    - "helm repo add tailscale https://pkgs.tailscale.com/helmcharts"
+
+  - name: Tailscale | Install Helm chart
+    delegate_to: localhost
+    ansible.builtin.command: |
+      helm upgrade \
+        --install \
+        tailscale-operator \
+        tailscale/tailscale-operator \
+        --namespace=tailscale \
+        --create-namespace \
+        --set-string oauth.clientId=" {{ tailscale.oauth.client_id }}" \
+        --set-string oauth.clientSecret="{{ tailscale.oauth.client_secret }}" \
+        --set-json 'extraEnv=[{"name":"TS_ACCEPT_DNS","value":"true"}]' \
+        --wait
+
+  - name: Tailscale | Check if the operator is connected
+    delegate_to: localhost
+    register: result
+    retries: 10
+    until: result is success
+    changed_when: false
+    ansible.builtin.shell: |
+      kubectl logs -n tailscale deployment/operator | grep "AuthLoop: state is Running; done"
